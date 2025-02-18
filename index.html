@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coding Space</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: #f4f4f9;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    #otp-section {
+      display: block;
+      margin-top: 20px;
+    }
+
+    #otp-section input {
+      padding: 10px;
+      width: 200px;
+      margin-right: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    #otp-section button {
+      padding: 10px 20px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #otp-section button:hover {
+      background-color: #45a049;
+    }
+
+    #timer {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 20px;
+      color: red;
+    }
+
+    #language-section {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .language-button {
+      padding: 15px 25px;
+      font-size: 18px;
+      margin: 10px;
+      border: none;
+      background-color: #008CBA;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .language-button:hover {
+      background-color: #007B9A;
+    }
+
+    #error-message {
+      color: red;
+      font-size: 18px;
+      margin-top: 20px;
+    }
+
+    #locked-message {
+      font-size: 24px;
+      color: red;
+      margin-top: 30px;
+      display: none;
+    }
+
+    /* Updated Warning Message Style */
+    #warning-message {
+      font-size: 40px; /* Larger font size */
+      font-weight: bold; /* Very bold */
+      color: orange;
+      margin-top: 30px;
+      display: none;
+      text-transform: uppercase; /* Optional: Make it all uppercase for emphasis */
+      letter-spacing: 2px; /* Optional: Adds spacing between letters */
+    }
+  </style>
+</head>
+<body>
+  <h1>Coding Space</h1>
+
+  <div id="otp-section">
+    <input type="text" id="otp-input" placeholder="Enter OTP">
+    <button onclick="verifyOTP()">Submit OTP</button>
+  </div>
+
+  <div id="language-section">
+    <h2>Select Programming Language</h2>
+    <button class="language-button" onclick="handleLanguageSelection('c')">C</button>
+    <button class="language-button" onclick="handleLanguageSelection('python')">Python</button>
+    <button class="language-button" onclick="handleLanguageSelection('java')">Java</button>
+  </div>
+
+  <div id="timer">60:00</div>
+
+  <div id="error-message"></div>
+
+  <div id="locked-message">Tab Locked. You cannot switch away from this page!</div>
+
+  <!-- Updated Warning Message -->
+  <div id="warning-message">You should not switch tabs, if so your session will be ended!</div>
+
+  <script>
+    const otpDatabase = [
+      "123456", "234567", "345678", "456789", "567890", "678901", "789012", "890123", "901234", "012345",
+      "543210", "654321", "765432", "876543", "987654", "123321", "234432", "345543", "456654", "567765"
+    ];
+    let sessionStarted = false;
+    let timeRemaining = 60 * 60; // 60 minutes in seconds
+    let tabSwitchCount = 0;
+    let otpUsed = false;
+
+    // Start timer when the session begins
+    let timerInterval;
+
+    function startTimer() {
+      timerInterval = setInterval(function() {
+        if (timeRemaining <= 0) {
+          clearInterval(timerInterval);
+          endSession();
+        } else {
+          timeRemaining--;
+          let minutes = Math.floor(timeRemaining / 60);
+          let seconds = timeRemaining % 60;
+          document.getElementById('timer').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+      }, 1000);
+    }
+
+    function verifyOTP() {
+      const otp = document.getElementById('otp-input').value;
+
+      if (otpDatabase.includes(otp)) {
+        if (otpUsed) {
+          document.getElementById('error-message').textContent = "This OTP has already been used.";
+          return;
+        }
+        
+        otpUsed = true;
+        sessionStarted = true;
+        document.getElementById('otp-section').style.display = 'none';
+        document.getElementById('language-section').style.display = 'block';
+        document.getElementById('error-message').textContent = '';
+      } else {
+        document.getElementById('error-message').textContent = "Invalid OTP.";
+      }
+    }
+
+    function handleLanguageSelection(language) {
+      // Show warning message that tab should not be switched
+      document.getElementById('warning-message').style.display = 'block';
+      
+      // Wait for 5 seconds before redirecting
+      setTimeout(function() {
+        redirectToCompiler(language);
+      }, 5000); // 5 seconds delay
+    }
+
+    function redirectToCompiler(language) {
+      let url = '';
+      if (language === 'c') {
+        url = 'https://www.onlinegdb.com/online_c_compiler';
+      } else if (language === 'python') {
+        url = 'https://www.onlinegdb.com/online_python_compiler';
+      } else if (language === 'java') {
+        url = 'https://www.onlinegdb.com/online_java_compiler';
+      }
+
+      // Lock the tab after 5 seconds
+      lockTab();
+
+      // Redirect to the compiler
+      window.location.href = url;
+    }
+
+    function lockTab() {
+      document.getElementById('locked-message').style.display = 'block';
+      document.body.style.pointerEvents = 'none';  // Disable all interactions with the page
+    }
+
+    function endSession() {
+      alert('Your session has ended due to inactivity or time expiry.');
+      window.close(); // Attempt to close the tab
+    }
+
+    // Track tab switches
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        tabSwitchCount++;
+        if (tabSwitchCount > 0) { // If the user switches tab even once
+          endSession();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
